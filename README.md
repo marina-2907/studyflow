@@ -86,6 +86,17 @@ npx expo start --web
 
 A versão web é uma alternativa de execução. O projeto foi desenvolvido com foco na experiência mobile.
 
+## 👩‍💻 Integrantes
+
+| Nome | RM |
+|---|---|
+| Marina Tamagnini Magalhães | 561786 |
+| Vitória Valentina Maglio | 563509 |
+| João Pedro Bitencourt Goldoni | 564339 |
+
+**Instituição:** FIAP  
+**Curso:** Análise e Desenvolvimento de Sistemas
+
 ## 🔥 Integração com Firebase
 
 O aplicativo utiliza:

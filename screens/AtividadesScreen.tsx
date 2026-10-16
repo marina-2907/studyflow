@@ -16,6 +16,7 @@ export type AtividadeSalva = {
 type Props = {
   onVoltar: () => void;
   onNovaAtividade: () => void;
+  onVerDetalhes: (atividade: AtividadeSalva) => void;
   atividades: AtividadeSalva[];
   carregando?: boolean;
   erro?: string;
@@ -28,7 +29,7 @@ function dataOrdenacao(valor: string): number {
 }
 
 export default function AtividadesScreen({
-  onVoltar, onNovaAtividade, atividades, carregando = false, erro = '', onAlternarConclusao,
+  onVoltar, onNovaAtividade, onVerDetalhes, atividades, carregando = false, erro = '', onAlternarConclusao,
 }: Props) {
   const pendentes = atividades.filter((a) => !a.concluida).length;
   const ordenadas = [...atividades].sort((a, b) =>
@@ -71,8 +72,10 @@ export default function AtividadesScreen({
                 {atividade.prioridade === 'Alta' ? '● ' : ''}{atividade.prioridade}
               </Text>
             </View>
-            <Text style={[styles.taskTitle, atividade.concluida && styles.strike]}>{atividade.titulo}</Text>
-            <Text style={styles.subject}>{atividade.materia}</Text>
+            <TouchableOpacity onPress={() => onVerDetalhes(atividade)} accessibilityLabel={`Ver detalhes de ${atividade.titulo}`}>
+              <Text style={[styles.taskTitle, atividade.concluida && styles.strike]}>{atividade.titulo}  ›</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => onVerDetalhes(atividade)}><Text style={styles.subject}>{atividade.materia} · Ver detalhes</Text></TouchableOpacity>
             {atividade.descricao ? <Text style={styles.description}>{atividade.descricao}</Text> : null}
             <View style={styles.taskBottom}>
               <View style={styles.dateRow}>

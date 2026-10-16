@@ -13,13 +13,10 @@ const firebaseConfig = {
   measurementId: 'G-FLSQQRX509',
 };
 
-// Evita inicializar o Firebase mais de uma vez
 const app = getApps().length > 0
   ? getApp()
   : initializeApp(firebaseConfig);
 
-// Autenticação: login e cadastro
 export const auth = getAuth(app);
 
-// Banco de dados: atividades dos estudantes
 export const db = getFirestore(app);

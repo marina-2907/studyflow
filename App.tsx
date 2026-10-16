@@ -22,6 +22,7 @@ import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
+  updateProfile,
   type User,
 } from 'firebase/auth';
 
@@ -29,8 +30,10 @@ import { auth, db } from './firebaseConfig';
 import { addDoc, collection, onSnapshot, query, updateDoc, doc, where, serverTimestamp } from 'firebase/firestore';
 import AtividadesScreen, { type AtividadeSalva } from './screens/AtividadesScreen';
 import NovaAtividadeScreen from './screens/NovaAtividadeScreen';
+import DetalhesAtividadeScreen from './screens/DetalhesAtividadeScreen';
 
 export default function App() {
+  const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
@@ -43,8 +46,9 @@ export default function App() {
   const [enviando, setEnviando] = useState(false);
 
   const [erro, setErro] = useState('');
-  const [telaAtual, setTelaAtual] = useState<'home' | 'atividades' | 'novaAtividade'>('home');
+  const [telaAtual, setTelaAtual] = useState<'home' | 'atividades' | 'novaAtividade' | 'detalhes'>('home');
   const [atividades, setAtividades] = useState<AtividadeSalva[]>([]);
+  const [atividadeSelecionadaId, setAtividadeSelecionadaId] = useState<string | null>(null);
   const [carregandoAtividades, setCarregandoAtividades] = useState(false);
   const [erroAtividades, setErroAtividades] = useState('');
 
@@ -107,6 +111,7 @@ export default function App() {
     setCadastro((anterior) => !anterior);
     setSenha('');
     setConfirmarSenha('');
+    setNome('');
     setErro('');
   }
 
@@ -155,6 +160,11 @@ export default function App() {
       return;
     }
 
+    if (cadastro && !nome.trim()) {
+      setErro('Digite seu nome completo.');
+      return;
+    }
+
     if (cadastro && senha.length < 6) {
       setErro('A senha precisa ter pelo menos 6 caracteres.');
       return;
@@ -169,11 +179,13 @@ export default function App() {
 
     try {
       if (cadastro) {
-        await createUserWithEmailAndPassword(
+        const credencial = await createUserWithEmailAndPassword(
           auth,
           emailLimpo,
           senha
         );
+        await updateProfile(credencial.user, { displayName: nome.trim() });
+        setUsuario({ ...credencial.user } as User);
       } else {
         await signInWithEmailAndPassword(
           auth,
@@ -184,6 +196,7 @@ export default function App() {
 
       setSenha('');
       setConfirmarSenha('');
+      setNome('');
     } catch (error: any) {
       console.log(
         'Erro Firebase:',
@@ -206,6 +219,7 @@ export default function App() {
       setEmail('');
       setSenha('');
       setConfirmarSenha('');
+      setNome('');
       setCadastro(false);
       setTelaAtual('home');
       setErro('');
@@ -251,11 +265,25 @@ export default function App() {
       );
     }
 
+    if (telaAtual === 'detalhes') {
+      const selecionada = atividades.find((item) => item.id === atividadeSelecionadaId);
+      if (selecionada) {
+        return (
+          <DetalhesAtividadeScreen
+            atividade={selecionada}
+            onVoltar={() => setTelaAtual('atividades')}
+            onAlternarConclusao={alternarConclusao}
+          />
+        );
+      }
+    }
+
     if (telaAtual === 'atividades') {
       return (
         <AtividadesScreen
           onVoltar={() => setTelaAtual('home')}
           onNovaAtividade={() => setTelaAtual('novaAtividade')}
+          onVerDetalhes={(atividade) => { setAtividadeSelecionadaId(atividade.id); setTelaAtual('detalhes'); }}
           atividades={atividades}
           carregando={carregandoAtividades}
           erro={erroAtividades}
@@ -281,7 +309,7 @@ export default function App() {
         </View>
 
         <Text style={styles.eyebrow}>SEU ESPAÇO DE ESTUDOS</Text>
-        <Text style={styles.welcome}>Olá, estudante! 👋</Text>
+        <Text style={styles.welcome}>Olá, {usuario.displayName?.trim().split(/\s+/)[0] || 'estudante'}! 👋</Text>
         <Text style={styles.homeSubtitle}>Seu dia fica mais leve quando tudo está organizado.</Text>
 
         <View style={styles.heroCard}>
@@ -386,6 +414,21 @@ export default function App() {
               ? 'Criar minha conta'
               : 'Entrar na minha conta'}
           </Text>
+
+          {cadastro && (
+            <>
+              <Text style={styles.label}>Nome completo</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Digite seu nome completo"
+                placeholderTextColor="#999"
+                value={nome}
+                onChangeText={setNome}
+                autoCapitalize="words"
+                editable={!enviando}
+              />
+            </>
+          )}
 
           <Text style={styles.label}>
             E-mail

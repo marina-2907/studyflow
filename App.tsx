@@ -29,6 +29,7 @@ import {
 import { auth, db } from './firebaseConfig';
 import { addDoc, collection, onSnapshot, query, updateDoc, doc, where, serverTimestamp } from 'firebase/firestore';
 import AtividadesScreen, { type AtividadeSalva } from './screens/AtividadesScreen';
+import FavoritosScreen from './screens/FavoritosScreen';
 import NovaAtividadeScreen from './screens/NovaAtividadeScreen';
 import DetalhesAtividadeScreen from './screens/DetalhesAtividadeScreen';
 
@@ -46,7 +47,7 @@ export default function App() {
   const [enviando, setEnviando] = useState(false);
 
   const [erro, setErro] = useState('');
-  const [telaAtual, setTelaAtual] = useState<'home' | 'atividades' | 'novaAtividade' | 'detalhes'>('home');
+  const [telaAtual, setTelaAtual] = useState<'home' | 'atividades' | 'favoritos' | 'novaAtividade' | 'detalhes'>('home');
   const [atividades, setAtividades] = useState<AtividadeSalva[]>([]);
   const [atividadeSelecionadaId, setAtividadeSelecionadaId] = useState<string | null>(null);
   const [carregandoAtividades, setCarregandoAtividades] = useState(false);
@@ -87,6 +88,7 @@ export default function App() {
         prioridade: item.data().prioridade || 'Média',
         descricao: item.data().descricao || '',
         concluida: item.data().concluida === true,
+        favorito: item.data().favorito === true,
       })));
       setCarregandoAtividades(false);
       setErroAtividades('');
@@ -104,6 +106,16 @@ export default function App() {
     } catch (error) {
       console.error('Erro ao atualizar atividade:', error);
       Alert.alert('Erro', 'Não foi possível atualizar a atividade.');
+    }
+  }
+
+  async function alternarFavorito(atividade: AtividadeSalva) {
+    if (!usuario || atividade.usuarioId && atividade.usuarioId !== usuario.uid) return;
+    try {
+      await updateDoc(doc(db, 'atividades', atividade.id), { favorito: !atividade.favorito });
+    } catch (error) {
+      console.error('Erro ao favoritar atividade:', error);
+      Alert.alert('Erro', 'Não foi possível atualizar o favorito.');
     }
   }
 
@@ -257,6 +269,7 @@ export default function App() {
               ...atividade,
               usuarioId: usuario.uid,
               concluida: false,
+              favorito: false,
               criadoEm: serverTimestamp(),
             });
             setTelaAtual('atividades');
@@ -273,9 +286,14 @@ export default function App() {
             atividade={selecionada}
             onVoltar={() => setTelaAtual('atividades')}
             onAlternarConclusao={alternarConclusao}
+            onAlternarFavorito={alternarFavorito}
           />
         );
       }
+    }
+
+    if (telaAtual === 'favoritos') {
+      return <FavoritosScreen atividades={atividades.filter((a) => a.favorito)} onVoltar={() => setTelaAtual('home')} onVerDetalhes={(atividade) => { setAtividadeSelecionadaId(atividade.id); setTelaAtual('detalhes'); }} onAlternarFavorito={alternarFavorito} carregando={carregandoAtividades} erro={erroAtividades} />;
     }
 
     if (telaAtual === 'atividades') {
@@ -288,6 +306,7 @@ export default function App() {
           carregando={carregandoAtividades}
           erro={erroAtividades}
           onAlternarConclusao={alternarConclusao}
+          onAlternarFavorito={alternarFavorito}
         />
       );
     }
@@ -350,6 +369,17 @@ export default function App() {
           <View style={styles.featureBody}>
             <Text style={styles.featureTitle}>Adicionar atividade</Text>
             <Text style={styles.featureDescription}>Anote um novo compromisso acadêmico.</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={21} color="#9D92B9" />
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.featureCard} onPress={() => setTelaAtual('favoritos')}>
+          <View style={[styles.featureIcon, styles.featureIconPink]}>
+            <Ionicons name="heart-outline" size={27} color="#CF65A0" />
+          </View>
+          <View style={styles.featureBody}>
+            <Text style={styles.featureTitle}>Meus favoritos</Text>
+            <Text style={styles.featureDescription}>Acesse suas atividades favoritas em um só lugar.</Text>
           </View>
           <Ionicons name="chevron-forward" size={21} color="#9D92B9" />
         </TouchableOpacity>

@@ -7,9 +7,10 @@ type Props = {
   atividade: AtividadeSalva;
   onVoltar: () => void;
   onAlternarConclusao: (atividade: AtividadeSalva) => Promise<void>;
+  onAlternarFavorito: (atividade: AtividadeSalva) => Promise<void>;
 };
 
-export default function DetalhesAtividadeScreen({ atividade, onVoltar, onAlternarConclusao }: Props) {
+export default function DetalhesAtividadeScreen({ atividade, onVoltar, onAlternarConclusao, onAlternarFavorito }: Props) {
   const [salvando, setSalvando] = React.useState(false);
   async function alternar() {
     if (salvando) return;
@@ -29,6 +30,9 @@ export default function DetalhesAtividadeScreen({ atividade, onVoltar, onAlterna
         <View style={styles.card}>
           <View style={styles.topRow}>
             <View style={styles.iconBox}><Ionicons name="book-outline" size={27} color="#7455D8" /></View>
+            <TouchableOpacity onPress={() => onAlternarFavorito(atividade)} accessibilityLabel={atividade.favorito ? 'Remover favorito' : 'Adicionar favorito'}>
+              <Ionicons name={atividade.favorito ? 'heart' : 'heart-outline'} color="#CF65A0" size={28} />
+            </TouchableOpacity>
             <Text style={styles.priority}>{atividade.prioridade}</Text>
           </View>
           <Text style={styles.title}>{atividade.titulo}</Text>

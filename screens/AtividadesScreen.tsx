@@ -11,6 +11,8 @@ export type AtividadeSalva = {
   prioridade: 'Baixa' | 'Média' | 'Alta';
   descricao: string;
   concluida: boolean;
+  favorito: boolean;
+  usuarioId?: string;
 };
 
 type Props = {
@@ -21,6 +23,7 @@ type Props = {
   carregando?: boolean;
   erro?: string;
   onAlternarConclusao: (atividade: AtividadeSalva) => Promise<void>;
+  onAlternarFavorito: (atividade: AtividadeSalva) => Promise<void>;
 };
 
 function dataOrdenacao(valor: string): number {
@@ -29,7 +32,7 @@ function dataOrdenacao(valor: string): number {
 }
 
 export default function AtividadesScreen({
-  onVoltar, onNovaAtividade, onVerDetalhes, atividades, carregando = false, erro = '', onAlternarConclusao,
+  onVoltar, onNovaAtividade, onVerDetalhes, atividades, carregando = false, erro = '', onAlternarConclusao, onAlternarFavorito,
 }: Props) {
   const pendentes = atividades.filter((a) => !a.concluida).length;
   const ordenadas = [...atividades].sort((a, b) =>
@@ -68,9 +71,14 @@ export default function AtividadesScreen({
           <View key={atividade.id} style={[styles.task, atividade.concluida && styles.completed]}>
             <View style={styles.taskTop}>
               <View style={styles.typeBadge}><Text style={styles.typeText}>{atividade.tipo}</Text></View>
-              <Text style={[styles.priority, atividade.prioridade === 'Alta' && styles.highPriority]}>
-                {atividade.prioridade === 'Alta' ? '● ' : ''}{atividade.prioridade}
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                <Text style={[styles.priority, atividade.prioridade === 'Alta' && styles.highPriority]}>
+                  {atividade.prioridade === 'Alta' ? '● ' : ''}{atividade.prioridade}
+                </Text>
+                <TouchableOpacity accessibilityLabel={atividade.favorito ? 'Remover dos favoritos' : 'Adicionar aos favoritos'} onPress={() => onAlternarFavorito(atividade)}>
+                  <Ionicons name={atividade.favorito ? 'heart' : 'heart-outline'} size={24} color="#CF65A0" />
+                </TouchableOpacity>
+              </View>
             </View>
             <TouchableOpacity onPress={() => onVerDetalhes(atividade)} accessibilityLabel={`Ver detalhes de ${atividade.titulo}`}>
               <Text style={[styles.taskTitle, atividade.concluida && styles.strike]}>{atividade.titulo}  ›</Text>
